@@ -1,0 +1,7 @@
+POST http://localhost:7132/api/ConvertWebPageToPdf
+Content-Type: application/json
+
+{
+  Url:"http://google.com",
+  GeneratedFileName: "sample-file-`"
+}
