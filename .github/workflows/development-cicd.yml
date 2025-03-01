@@ -1,11 +1,25 @@
 name: DotNetPocAzFunctions-Dev
 on:
   pull_request:
-    branches: [develop]
+    branches: 
+    - develop
   push:
-    branches: ["develop"]
+    branches: 
+    - develop
+env:
+  DOTNET_VERSION: 9.*.*
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - run: echo "Triggered by ${{github.event_name}}"
+      - name: Checkout Source Code
+        uses: actions/checkout@v4.2.2
+      - name: Setup .NET Core 9.* SDK
+        uses: actions/setup-dotnet@v4.3.0
+        with:
+          dotnet-version: ${{env.DOTNET_VERSION}}
+      - name: Build the project
+        run: dotnet build --configuration Release
+
+          
