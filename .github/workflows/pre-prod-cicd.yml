@@ -10,7 +10,12 @@ on:
           - dev
           - staging
           - prod
-
+  push:
+    branches:
+    - develop
+  pull_request:
+    branches:
+    - develop
 jobs:
   build-test-deploy:
     runs-on: ubuntu-latest
