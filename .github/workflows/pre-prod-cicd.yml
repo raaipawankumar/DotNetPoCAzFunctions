@@ -1,35 +1,57 @@
 name: pre-prod-ci-cd
+run-name: |
+  ${{
+    github.event_name == 'push' && format('Commit:{0}:{1}', github.event.head_commit.message, github.actor)||
+    github.event_name == 'pull_request' && format('PR:{0}:{1}',github.event.pull_request.title, github.actor)||
+    format('Running manually {0}:{1}',github.event.inputs.deploy-on, github.actor)
+  }}
+
 on:
   workflow_dispatch:
     inputs:
-      environment:
+      deploy-on:
         description: "Select environment"
         required: true
         type: choice
         options:
+          - test
           - dev
-          - staging
-          - prod
+
   push:
     branches:
-    - develop
+      - develop
   pull_request:
     branches:
-    - develop
+      - develop
+env:
+  BRANCH_NAME: "develop"
+  DOTNET_VERSION: "9.0.x"
 jobs:
   build-test-deploy:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Environment detail
-        run: echo "Environment - ${{github.event.inputs.environment}}, Triggered by event - ${{github.event_name}}, Branch - ${{github.ref}}"
+      - name: Verify running against ${{env.BRANCH_NAME}} branch
+        run: |
+          if [ "${{ github.ref }}" != "refs/heads/${{env.BRANCH_NAME}}" ]; then
+            echo "Error: This workflow can only be run on the ${{env.BRANCH_NAME}} branch."
+            exit 1
+          fi
+          echo "Running on the correct branch: ${{env.BRANCH_NAME}}"
+
+      - name: Execution Details
+        run: |
+          echo "Deployment Environment: ${{github.event.inputs.deploy-on}}"
 
       - name: Checkout Repository
         uses: actions/checkout@v4
+        with:
+          ref: ${{env.BRANCH_NAME}}
 
-      - name: Setup .NET SDK 9.0.x
+      - name: Setup .NET SDK ${{env.DOTNET_VERSION}}
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: 9.0.x
+          dotnet-version: ${{env.DOTNET_VERSION}}
 
       - name: Build
         run: dotnet build --configuration Release
