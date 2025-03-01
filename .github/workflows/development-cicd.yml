@@ -1,7 +1,11 @@
-name: DotNetPocAzFunctions - Development
-
+name: DotNetPocAzFunctions-Dev
 on:
   pull_request:
-    branches: []
-merge:
-  branches: []
+    branches: [develop]
+  push:
+    branches: ["develop"]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "Triggered by ${{github.event_name}}"
