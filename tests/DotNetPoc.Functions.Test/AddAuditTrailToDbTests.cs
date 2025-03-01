@@ -3,7 +3,7 @@
 public class AddAuditTrailToDBTests
 {
   [Fact]
-  public void Test1()
+  public void Test_AddAuditTrail_Success()
   {
 
   }
