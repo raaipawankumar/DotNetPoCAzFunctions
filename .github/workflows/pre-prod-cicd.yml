@@ -1,11 +1,5 @@
 name: pre-prod-ci-cd
 on:
-  pull_request:
-    branches:
-      - develop
-  push:
-    branches:
-      - develop
   workflow_dispatch:
     inputs:
       environment:
@@ -16,6 +10,13 @@ on:
           - dev
           - staging
           - prod
+  pull_request:
+    branches:
+      - develop
+  push:
+    branches:
+      - develop
+
 
 jobs:
   build-test-deploy:
