@@ -1,7 +1,7 @@
 name: prod-ci-cd
 run-name: |
   ${{
-    github.event_name == 'push' && format('Commit by {0} on {1}: {2}', github.actor, github.ref_name, github.event.head_commit.message)||
+    github.event_name == 'push' && format('Commit by {0} on {1}: {2}', github.actor, github.ref_name, github.event.head_commit.message) ||
     github.event_name == 'pull_request' && format('PR by {0} on {1}: {2}',github.actor, github.ref_name, github.event.pull_request.title)
   }}
 
