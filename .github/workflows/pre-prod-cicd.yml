@@ -1,5 +1,11 @@
 name: pre-prod-ci-cd
-run-name: Running - ${{github.action}} - ${{github.actor}} - ${{github.}}
+run-name: |
+  ${{
+    github.event_name == 'push' && format('Commit:{0}:{1}', github.event.head_commit.message, github.actor)||
+    github.event_name == 'pull_request' && format('PR:{0}:{1}',github.event.pull_request.title, github.actor)||
+    format('Running manually {0}:{1}',github.event.inputs.deploy-on, github.actor)
+  }}
+
 on:
   workflow_dispatch:
     inputs:
@@ -33,8 +39,9 @@ jobs:
           fi
           echo "Running on the correct branch: ${{env.BRANCH_NAME}}"
 
-      - name: Execution Environment Details
-        run: echo "Environment - ${{github.event.inputs.environment}}, Triggered by event - ${{github.event_name}}"
+      - name: Execution Details
+        run: |
+          echo "Deployment Environment: ${{github.event.inputs.deploy-on}}"
 
       - name: Checkout Repository
         uses: actions/checkout@v4
