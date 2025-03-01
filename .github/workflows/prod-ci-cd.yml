@@ -1,0 +1,45 @@
+name: prod-ci-cd
+run-name: |
+  ${{
+    github.event_name == 'push' && format('Commit by {0} on {1}: {2}', github.actor, github.ref_name, github.event.head_commit.message)||
+    github.event_name == 'pull_request' && format('PR by {0} on {1}: {2}',github.actor, github.ref_name, github.event.pull_request.title)||
+  }}
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "src/**"
+      - "tests/*"
+
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "src/**"
+      - "tests/*"
+
+env:
+  DOTNET_VERSION: "9.0.x"
+
+jobs:
+  build-test-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Setup .NET SDK ${{env.DOTNET_VERSION}}
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{env.DOTNET_VERSION}}
+
+      - name: Build
+        run: dotnet build --configuration Release
+
+      - name: Test
+        run: dotnet test --configuration Release --no-build --verbosity normal
