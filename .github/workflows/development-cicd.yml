@@ -1,1 +1,7 @@
+name: DotNetPocAzFunctions - Development
 
+on:
+  pull_request:
+    branches: []
+merge:
+  branches: []
