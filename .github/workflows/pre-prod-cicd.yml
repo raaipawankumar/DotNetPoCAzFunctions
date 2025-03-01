@@ -1,4 +1,4 @@
-name: dotnetpocazfunctions-develop-ci-cd
+name: pre-prod-ci-cd
 on:
   pull_request:
     branches:
@@ -6,11 +6,22 @@ on:
   push:
     branches:
       - develop
+  workflow_dispatch:
+    inputs:
+      environment:
+        required: true
+        description: Select environment to build and deploy
+        type: choice
+        options:
+          - dev
+          - test
+
 jobs:
   build-test-deploy:
     runs-on: ubuntu-latest
     steps:
-      - run: echo "Triggered by ${{github.event_name}} on branch ${{github.ref}}"
+      - name: Environment detail
+        run: echo "Environment - ${{github.event.inputs.environment}}, Triggered by event - ${{github.event_name}}, Branch - ${{github.ref}}"
 
       - name: Checkout Repository
         uses: actions/checkout@v4
