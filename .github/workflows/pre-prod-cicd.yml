@@ -20,12 +20,21 @@ on:
   push:
     branches:
       - develop
+    paths:
+      - "src/**"
+      - "tests/*"
+
   pull_request:
     branches:
       - develop
+    paths:
+      - "src/**"
+      - "tests/*"
+
 env:
   BRANCH_NAME: "develop"
   DOTNET_VERSION: "9.0.x"
+
 jobs:
   build-test-deploy:
     runs-on: ubuntu-latest
