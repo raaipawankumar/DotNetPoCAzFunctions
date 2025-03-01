@@ -1,5 +1,5 @@
 name: pre-prod-ci-cd
-run-name: Running pipeline on branch ${{github.ref}} on event ${{github.action}} by ${{github.actor}}
+run-name: Running - ${{github.action}} - ${{github.actor}} - ${{github.}}
 on:
   workflow_dispatch:
     inputs:
