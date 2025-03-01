@@ -9,12 +9,13 @@ on:
   workflow_dispatch:
     inputs:
       environment:
+        description: "Select environment"
         required: true
-        description: Select environment to build and deploy
         type: choice
         options:
           - dev
-          - test
+          - staging
+          - prod
 
 jobs:
   build-test-deploy:
