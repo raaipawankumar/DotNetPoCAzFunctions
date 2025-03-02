@@ -1,31 +1,22 @@
 using Azure.Storage.Queues.Models;
 using Microsoft.Azure.Functions.Worker;
 using Newtonsoft.Json;
-using DotNetPoC.Functions.Models;
+using static DotNetPoC.Functions.Shared.JsonConvertSettings;
 
 namespace DotNetPoC.Functions;
 
 public class AddAuditTrailToDbFunction()
 {
   [Function(nameof(AddAuditTrailToDbFunction))]
-  public CosmosDBResponse? Run(
-    [QueueTrigger("%AuditTrail:QueueName%", Connection = "Storage")] QueueMessage message)
+  [CosmosDBOutput(databaseName: "%CosmosDB:Database%", containerName: "%CosmosDB:Container%", Connection = "CosmosDB")]
+  public dynamic?[] Run([QueueTrigger("%AuditTrail:QueueName%", Connection = "Storage")] QueueMessage message)
   {
-
-    var auditDocument = JsonConvert.SerializeObject(new
+    return [ new
     {
-      Id = message.MessageId,
-      Trail = message.Body.ToString(),
-      CreatedAt = DateTime.UtcNow
-    },
-    AppJsonSerializer.Default);
-
-    CosmosDBResponse response = new()
-    {
-      Document = auditDocument
-    };
-
-    return response;
+      id = message.MessageId,
+      trail = message.Body.ToString(),
+      createdAt = DateTime.UtcNow
+    }];
   }
 }
 
