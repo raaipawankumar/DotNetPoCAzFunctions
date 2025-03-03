@@ -1,7 +1,5 @@
 using Azure.Storage.Queues.Models;
 using Microsoft.Azure.Functions.Worker;
-using Newtonsoft.Json;
-using static DotNetPoC.Functions.Shared.JsonConvertSettings;
 
 namespace DotNetPoC.Functions;
 

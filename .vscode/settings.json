@@ -5,5 +5,6 @@
   "debug.internalConsoleOptions": "neverOpen",
   "azureFunctions.preDeployTask": "publish (functions)",
   "azureFunctions.projectSubpath": "src\\DotNetPoC.Functions",
-  "cSpell.words": ["Newtonsoft"]
+  "cSpell.words": ["Newtonsoft"],
+  "cSpell.ignoreWords": ["SENDGRID"]
 }

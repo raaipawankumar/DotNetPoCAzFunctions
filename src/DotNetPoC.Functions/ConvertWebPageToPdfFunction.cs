@@ -1,67 +1,55 @@
-using Azure.Storage.Blobs;
 using DotNetPoC.Functions.Models;
-using Google.Protobuf.WellKnownTypes;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+using DotNetPoC.Functions.Shared;
 using Microsoft.Azure.Functions.Worker;
-using Microsoft.Extensions.Configuration;
+using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
-using PuppeteerSharp;
-using static System.Environment;
+using System.Net;
+
 
 namespace DotNetPoC.Functions
 {
-  public class ConvertWebPageToPdfFunction(ILogger<ConvertWebPageToPdfFunction> logger)
+  public class ConvertWebPageToPdfFunction(ILogger<ConvertWebPageToPdfFunction> logger,
+   CloudStorage storage)
   {
-    private const string FunctionName = "ConvertWebPageToPdf";
 
-
-    [Function(FunctionName)]
-    public async Task<IActionResult> RunAsync([HttpTrigger(AuthorizationLevel.Function, "post")] HttpRequest req)
+    [Function(nameof(ConvertWebPageToPdfFunction))]
+    public async Task<HttpResponseData> RunAsync(
+      [HttpTrigger(AuthorizationLevel.Function, "post", Route = "page-to-pdf")] HttpRequestData req)
     {
+      var requestAsJson = await StreamConverter.ToStringAsync(req.Body);
+      var result = AppJsonSerializer.Deserialize<PageToPdfRequest>(requestAsJson);
 
-      var webPageRequest = await GetWebPageRequestFromRequestAsync(req);
-      if (webPageRequest == null)
+      HttpResponseData response = req.CreateResponse();
+      if (!result.IsSuccess)
       {
-        return new BadRequestObjectResult("Input is not in valid format");
+        if (result.Exception != null)
+        {
+          logger.LogError(result.Exception, "Exception occurred during json deserialization");
+        }
+
+        response.StatusCode = HttpStatusCode.BadRequest;
+        response.WriteString("Input is not in valid format. Input must be json object" +
+          " with url and generatedFileName property");
+        return response;
       }
 
-      if (string.IsNullOrWhiteSpace(webPageRequest.Url))
+      if (string.IsNullOrWhiteSpace(result.Value!.Url))
       {
-        return new BadRequestObjectResult("url is empty");
+        response.StatusCode = HttpStatusCode.BadRequest;
+        response.WriteString("url is required");
+        return response;
       }
 
-      logger.LogInformation("Converting {url} to pdf", webPageRequest.Url);
+      logger.LogInformation("Converting {url} to pdf", result.Value.Url);
 
-      using var pdfStream = await GetPdfFromUrl(webPageRequest.Url);
-      await UploadPdfAsync(webPageRequest.GeneratedFileName, pdfStream);
+      using var pdfStream = await PdfGenerator.GenerateFromUrl(result.Value.Url);
+      var pdfUrl = await storage.UploadWebPagePDfAsync(pdfStream, result.Value.GeneratedFileName);
 
-      return new OkObjectResult("Web page is converted");
+      response.StatusCode = HttpStatusCode.OK;
+      response.WriteString(pdfUrl);
+      return response;
     }
-    private async static Task<WebPageRequest?> GetWebPageRequestFromRequestAsync(HttpRequest req)
-    {
-      using var streamReader = new StreamReader(req.Body);
-      var body = await streamReader.ReadToEndAsync();
-      return JsonConvert.DeserializeObject<WebPageRequest>(body);
-    }
-    private static async Task<Stream> GetPdfFromUrl(string url)
-    {
-      var browserFetcher = new BrowserFetcher();
-      await browserFetcher.DownloadAsync(BrowserTag.Dev);
-      await using var browser = await Puppeteer.LaunchAsync(new LaunchOptions { Headless = true });
-      await using var browserPage = await browser.NewPageAsync();
-      await browserPage.GoToAsync(url);
-      await browserPage.EvaluateExpressionHandleAsync("document.fonts.ready");
-      return await browserPage.PdfStreamAsync();
-    }
-    private static async Task UploadPdfAsync(string fileName, Stream pdfStream)
-    {
-      var blobConnectionString = GetEnvironmentVariable("Storage");
-      var containerName = GetEnvironmentVariable("PDFContainerName");
-      var newFileName = $"{fileName}-{DateTime.UtcNow.ToTimestamp()}";
-      var blobClient = new BlobClient(blobConnectionString, containerName, newFileName);
-      await blobClient.UploadAsync(pdfStream);
-    }
+
+
   }
 }
