@@ -1,4 +1,4 @@
-name: pre-prod-ci-cd
+name: develop-ci-cd
 run-name: |
   ${{
     github.event_name == 'push' && format('Commit by {0} on {1}: {2}', github.actor, github.ref_name, github.event.head_commit.message)||
@@ -7,16 +7,6 @@ run-name: |
   }}
 
 on:
-  workflow_dispatch:
-    inputs:
-      deploy-on:
-        description: "Deploy On"
-        required: true
-        type: choice
-        options:
-          - test
-          - dev
-
   push:
     branches:
       - develop
@@ -36,21 +26,10 @@ env:
   DOTNET_VERSION: "9.0.x"
 
 jobs:
-  build-test-deploy:
+  build-test:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Verify running against ${{env.BRANCH_NAME}} branch
-        run: |
-          if [ "${{ github.ref }}" != "refs/heads/${{env.BRANCH_NAME}}" ]; then
-            echo "Error: This workflow can only be run on the ${{env.BRANCH_NAME}} branch."
-            exit 1
-          fi
-          echo "Running on the correct branch: ${{env.BRANCH_NAME}}"
-
-      - name: Execution Details
-        run: |
-          echo "Deployment Environment: ${{github.event.inputs.deploy-on}}"
 
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -67,3 +46,14 @@ jobs:
 
       - name: Test
         run: dotnet test --configuration Release --no-build --verbosity normal
+        
+      - name: publish
+        if: ${{github.event_name == 'push'}}
+        run: dotnet publish --configuration Release --no-build --no-restore --output /publish-output
+        
+      - name: Upload published artifact
+        if: ${{github.event_name == 'push'}}
+        uses: actions/upload-artifact@v4.6.1
+        with:
+          name: develop-artifact-${{build.build_number}}
+      
