@@ -11,6 +11,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: develop-artifact
+          repository: ${{github.repository}}
 
       - name: Artifact Detail
         run: ls -R
