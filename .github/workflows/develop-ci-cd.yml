@@ -53,14 +53,15 @@ jobs:
       - name: Publish
         if: github.event_name == 'push'
         working-directory: ./src/DotNetPoC.Functions
-        run: dotnet publish --configuration Release --no-build --no-restore --output ./publish-output
+        run: dotnet publish --configuration Release --no-build --no-restore --output ../publish-output
 
       - name: Upload Published Artifact
         if: github.event_name == 'push'
         uses: actions/upload-artifact@v4.6.1
         with:
-          path: "./publish-output"
+          path: "./src/publish-output"
           name: develop-artifact
+
   deploy-to-dev:
     needs: build-and-test
     uses: ./.github/workflows/deploy.yml
