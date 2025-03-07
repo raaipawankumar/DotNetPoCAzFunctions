@@ -23,9 +23,11 @@ env:
   BRANCH_NAME: "develop"
   DOTNET_VERSION: "9.0.x"
   PUBLISH_PROJECT_PATH: "${{github.workspace}}/src/DotNetPoC.Functions/"
+  ARTIFACT_NAME: develop-artifact
 
 jobs:
-  build-test:
+  build:
+    name: Build and Test
     runs-on: ubuntu-latest
 
     steps:
@@ -58,4 +60,11 @@ jobs:
         uses: actions/upload-artifact@v4.6.1
         with:
           path: "${{github.workspace}}/publish-output"
-          name: develop-artifact
+          name: ${{env.ARTIFACT_NAME}}
+  deploy:
+    name: "Deploy"
+    needs: build
+    uses: ./.github/workflows/deployment.yml
+    with:
+      environment: dev
+      artifact-name: develop-artifact
