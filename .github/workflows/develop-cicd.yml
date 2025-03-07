@@ -10,6 +10,7 @@ on:
     paths:
       - "src/**"
       - "tests/**"
+      - ".github/**"
 
   pull_request:
     branches:
@@ -21,6 +22,7 @@ on:
 env:
   BRANCH_NAME: "develop"
   DOTNET_VERSION: "9.0.x"
+  PUBLISH_PROJECT_PATH: "${{github.workspace}}/src/DotNetPoC.Functions/"
 
 jobs:
   build-test:
@@ -45,13 +47,15 @@ jobs:
 
       - name: publish
         if: ${{github.event_name == 'push'}}
-        run: dotnet publish --configuration Release --no-build --no-restore --output ./publish-output
+        run: dotnet publish ${{env.PUBLISH_PROJECT_PATH}} --configuration Release --no-build --no-restore --output "${{github.workspace}}/publish-output"
       - name: "files"
-        run: ls -a
+        run: |
+          ls -a
+          echo ${{github.workspace}}
 
       - name: Upload published artifact
         if: ${{github.event_name == 'push'}}
         uses: actions/upload-artifact@v4.6.1
         with:
-          path: ./publish-output
+          path: "${{github.workspace}}/publish-output"
           name: develop-artifact
