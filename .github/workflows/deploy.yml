@@ -2,7 +2,7 @@ name: "Deployment Workflow"
 on:
   workflow_call:
     inputs:
-      environment:
+      deploy-environment:
         required: true
         type: string
       artifact-name:
@@ -12,7 +12,7 @@ jobs:
   deploy-to-dev:
     name: "Deploy To DEV"
     runs-on: "ubuntu-latest"
-    if: inputs.environment == 'dev'
+    if: inputs.deploy-environment == 'dev'
     steps:
       - name: Download Published Artifacts
         uses: actions/download-artifact@v4
@@ -23,7 +23,7 @@ jobs:
   deploy-to-qa:
     name: "Deploy To QA"
     runs-on: "ubuntu-latest"
-    if: inputs.environment == 'qa'
+    if: inputs.deploy-environment == 'qa'
     steps:
       - name: Download Published Artifacts
         uses: actions/download-artifact@v4
@@ -34,4 +34,4 @@ jobs:
         run: ls -R
 
       - name: "Deploy"
-        run: echo Deploying in ${{inputs.environment}}
+        run: echo Deploying in ${{inputs.deploy-environment}}

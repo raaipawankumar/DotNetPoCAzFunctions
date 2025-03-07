@@ -64,7 +64,25 @@ jobs:
 
   deploy-to-dev:
     needs: build-and-test
-    uses: ./.github/workflows/deploy.yml
-    with:
-      environment: dev
-      artifact-name: develop-artifact
+    name: "Deploy To DEV"
+    runs-on: "ubuntu-latest"
+    steps:
+      - name: Download Published Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: develop-artifact
+      - name: Artifact Detail
+        run: ls -R
+
+  deploy-to-qa:
+    needs: build-and-test
+    name: "Deploy To QA"
+    runs-on: "ubuntu-latest"
+    environment: qa
+    steps:
+      - name: Download Published Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: develop-artifact
+      - name: Artifact Detail
+        run: ls -R
