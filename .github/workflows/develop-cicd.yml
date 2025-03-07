@@ -1,10 +1,7 @@
 name: develop-ci-cd
 run-name: |
-  ${{
-    github.event_name == 'push' && format('Commit by {0} on {1}: {2}', github.actor, github.ref_name, github.event.head_commit.message)||
-    github.event_name == 'pull_request' && format('PR by {0} on {1}: {2}',github.actor, github.ref_name, github.event.pull_request.title)||
-    format('Running manually by {0} on {1}: Deploy on {2}', github.actor, github.ref_name, github.event.inputs.deploy-on)
-  }}
+  ${{github.event_name == 'push' && format('Commit by {0} on {1}: {2}', github.actor, github.ref_name, github.event.head_commit.message)||
+    github.event_name == 'pull_request' && format('PR by {0} on {1}: {2}',github.actor, github.ref_name, github.event.pull_request.title)}}
 
 on:
   push:
@@ -30,7 +27,6 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-
       - name: Checkout Repository
         uses: actions/checkout@v4
         with:
@@ -46,14 +42,16 @@ jobs:
 
       - name: Test
         run: dotnet test --configuration Release --no-build --verbosity normal
-        
+
       - name: publish
         if: ${{github.event_name == 'push'}}
-        run: dotnet publish --configuration Release --no-build --no-restore --output /publish-output
-        
+        run: dotnet publish --configuration Release --no-build --no-restore --output ./publish-output
+      - name: "files"
+        run: ls -a
+
       - name: Upload published artifact
         if: ${{github.event_name == 'push'}}
         uses: actions/upload-artifact@v4.6.1
         with:
-          name: develop-artifact-${{build.build_number}}
-      
+          path: ./publish-output
+          name: develop-artifact
