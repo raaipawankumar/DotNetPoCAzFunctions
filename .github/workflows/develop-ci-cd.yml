@@ -22,16 +22,14 @@ on:
 env:
   BRANCH_NAME: "develop"
   DOTNET_VERSION: "9.0.x"
-  PUBLISH_PROJECT_PATH: "${{github.workspace}}/src/DotNetPoC.Functions/"
-  ARTIFACT_NAME: develop-artifact
 
 jobs:
-  build:
+  build-and-test:
     name: Build and Test
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Repository
+      - name: Checkout Develop Branch
         uses: actions/checkout@v4
         with:
           ref: ${{env.BRANCH_NAME}}
@@ -44,27 +42,28 @@ jobs:
       - name: Build
         run: dotnet build --configuration Release
 
-      - name: Test
-        run: dotnet test --configuration Release --no-build --verbosity normal
+      - name: Run Unit Tests
+        working-directory: ./tests/DotNetPoc.Functions.UnitTests
+        run: dotnet test --configuration Release --no-build
 
-      - name: publish
-        if: ${{github.event_name == 'push'}}
-        run: dotnet publish ${{env.PUBLISH_PROJECT_PATH}} --configuration Release --no-build --no-restore --output "${{github.workspace}}/publish-output"
-      - name: "files"
-        run: |
-          ls -a
-          echo ${{github.workspace}}
+      - name: Run Integration Tests
+        working-directory: ./tests/DotNetPoC.Functions.IntegrationTests
+        run: dotnet test --configuration Release --no-build
 
-      - name: Upload published artifact
-        if: ${{github.event_name == 'push'}}
+      - name: Publish
+        if: github.event_name == 'push'
+        working-directory: ./src/DotNetPoC.Functions
+        run: dotnet publish --configuration Release --no-build --no-restore --output ./publish-output"
+
+      - name: Upload Published Artifact
+        if: github.event_name == 'push'
         uses: actions/upload-artifact@v4.6.1
         with:
-          path: "${{github.workspace}}/publish-output"
-          name: ${{env.ARTIFACT_NAME}}
-  deploy:
-    name: "Deploy"
-    needs: build
-    uses: ./.github/workflows/deployment.yml
+          path: "./publish-output"
+          name: develop-artifact
+  deploy-to-dev:
+    needs: build-and-test
+    uses: ./.github/workflows/deploy.yml
     with:
       environment: dev
       artifact-name: develop-artifact

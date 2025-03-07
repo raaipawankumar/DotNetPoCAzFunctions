@@ -10,7 +10,7 @@ on:
         type: string
 jobs:
   deploy-to-dev:
-    name: "Deploy To Dev"
+    name: "Deploy To DEV"
     runs-on: "ubuntu-latest"
     if: inputs.environment == 'dev'
     steps:
@@ -20,3 +20,18 @@ jobs:
           name: ${{inputs.artifact-name}}
       - name: Artifact Detail
         run: ls -R
+  deploy-to-qa:
+    name: "Deploy To QA"
+    runs-on: "ubuntu-latest"
+    if: inputs.environment == 'qa'
+    steps:
+      - name: Download Published Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{inputs.artifact-name}}
+
+      - name: Artifact Detail
+        run: ls -R
+
+      - name: "Deploy"
+        run: echo Deploying in ${{inputs.environment}}
