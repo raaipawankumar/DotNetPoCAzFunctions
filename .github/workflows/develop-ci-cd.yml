@@ -1,0 +1,70 @@
+name: develop-ci-cd
+run-name: |
+  ${{github.event_name == 'push' && format('Commit by {0} on {1}: {2}', github.actor, github.ref_name, github.event.head_commit.message)||
+    github.event_name == 'pull_request' && format('PR by {0} on {1}: {2}',github.actor, github.ref_name, github.event.pull_request.title)}}
+
+on:
+  push:
+    branches:
+      - develop
+    paths:
+      - "src/**"
+      - "tests/**"
+      - ".github/**"
+
+  pull_request:
+    branches:
+      - develop
+    paths:
+      - "src/**"
+      - "tests/**"
+
+env:
+  BRANCH_NAME: "develop"
+  DOTNET_VERSION: "9.0.x"
+
+jobs:
+  build-and-test:
+    name: Build and Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Develop Branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{env.BRANCH_NAME}}
+
+      - name: Setup .NET SDK ${{env.DOTNET_VERSION}}
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{env.DOTNET_VERSION}}
+
+      - name: Build
+        run: dotnet build --configuration Release
+
+      - name: Run Unit Tests
+        working-directory: ./tests/DotNetPoc.Functions.UnitTests
+        run: dotnet test --configuration Release --no-build
+
+      - name: Run Integration Tests
+        working-directory: ./tests/DotNetPoC.Functions.IntegrationTests
+        run: dotnet test --configuration Release --no-build
+
+      - name: Publish
+        if: github.event_name == 'push'
+        working-directory: ./src/DotNetPoC.Functions
+        run: dotnet publish --configuration Release --no-build --no-restore --output ../publish-output
+
+      - name: Upload Published Artifact
+        if: github.event_name == 'push'
+        uses: actions/upload-artifact@v4.6.1
+        with:
+          path: "./src/publish-output"
+          name: develop-artifact
+
+  deploy-to-dev:
+    needs: build-and-test
+    uses: ./.github/workflows/deploy.yml
+    with:
+      environment: dev
+      artifact-name: develop-artifact
